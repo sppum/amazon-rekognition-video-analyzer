@@ -72,6 +72,7 @@ def packagelambda(* functions):
         zipf = zipfile.ZipFile("%s.zip" % function, "w", zipfile.ZIP_DEFLATED)
         
         write_dir_to_zip("../lambda/%s/" % function, zipf)
+        write_dir_to_zip(os.path.join(os.environ['VIRTUAL_ENV'], 'lib', 'python2.7', 'site-packages', ''), zipf)
         zipf.write("../config/%s-params.json" % function, "%s-params.json" % function)
 
         zipf.close()

@@ -2,6 +2,7 @@
 # Licensed under the Amazon Software License (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
 #     http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
+import glob
 import os
 import shutil
 import zipfile
@@ -463,4 +464,51 @@ def deletedata(global_params_path="config/global-params.json", cfn_params_path="
     print("Deleted %s batches of items from DynamoDB." % batch_count)
 
     return
+
+
+@task()
+def uploadimages(cfn_params_path="config/cfn-params.json"):
+    cfn_params_dict = read_json(cfn_params_path)
+    source_bucket = cfn_params_dict["SourceS3BucketParameter"]
+    images_prefix = cfn_params_dict["ImagesPrefix"]
+    image_collection = cfn_params_dict["ImagesCollection"]
+
+    s3_client = boto3.client("s3")
+    rekognition_client = boto3.client("rekognition")
+
+    try:
+        rekognition_client.create_collection(CollectionId=image_collection)
+        print('Created collection')
+    except botocore.exceptions.ClientError as e:
+        code = e.response['Error']['Code']
+        if code == 'ResourceAlreadyExistsException':
+            print('Collection already exists')
+        else:
+            raise
+
+    count = 0
+    for filename in glob.glob(os.path.join(images_prefix, "*")):
+        try:
+            print('Uploading {} to S3...'.format(filename))
+            s3_key = '/'.join([images_prefix, filename])
+            with open(filename, 'rb') as fh:
+                s3_client.put_object(
+                    Body=fh,
+                    Bucket=source_bucket,
+                    Key=s3_key
+                )
+            print('Adding to image collection...')
+            rekognition_client.index_faces(
+                CollectionId=image_collection,
+                Image={'S3Object': {
+                    'Bucket': source_bucket,
+                    'Name': s3_key
+                }},
+                ExternalImageId=os.path.basename(filename)
+            )
+            count += 1
+        except Exception as e:
+            print('Failed to upload/index image!')
+            print(e)
+    print('Processed {} image(s)'.format(count))
 

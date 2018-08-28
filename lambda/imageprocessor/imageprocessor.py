@@ -92,7 +92,7 @@ def process_image(event, context):
             faces.append({
                 'face_id': face_id,
                 'image_id': image_id,
-                'exernal_id': external_id,
+                'external_id': external_id,
                 'confidence': confidence
             })
 

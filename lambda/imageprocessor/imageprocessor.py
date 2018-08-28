@@ -14,7 +14,6 @@ import cPickle
 import boto3
 import pytz
 from pytz import timezone
-from copy import deepcopy
 
 
 def load_config():
@@ -40,7 +39,6 @@ def process_image(event, context):
 
     # Initialize clients
     rekog_client = boto3.client('rekognition')
-    sns_client = boto3.client('sns')
     s3_client = boto3.client('s3')
     dynamodb = boto3.resource('dynamodb')
 
@@ -52,13 +50,7 @@ def process_image(event, context):
 
     ddb_table = dynamodb.Table(config["ddb_table"])
 
-    rekog_max_labels = config["rekog_max_labels"]
-    rekog_min_conf = float(config["rekog_min_conf"])
-
-    label_watch_list = config["label_watch_list"]
-    label_watch_min_conf = float(config["label_watch_min_conf"])
-    label_watch_phone_num = config.get("label_watch_phone_num", "")
-    label_watch_sns_topic_arn = config.get("label_watch_sns_topic_arn", "")
+    collection_id = config.get("ImagesCollection")
 
     # Iterate on frames fetched from Kinesis
     for record in event['Records']:
@@ -81,66 +73,28 @@ def process_image(event, context):
         day = now.strftime("%d")
         hour = now.strftime("%H")
 
-        rekog_response = rekog_client.detect_labels(
+        response = rekog_client.search_faces_by_image(
             Image={
                 'Bytes': img_bytes
             },
-            MaxLabels=rekog_max_labels,
-            MinConfidence=rekog_min_conf
+            CollectionId=collection_id
         )
 
         # Iterate on rekognition labels. Enrich and prep them for storage in
         # DynamoDB
-        labels_on_watch_list = []
-        for label in rekog_response['Labels']:
-
-            lbl = label['Name']
-            conf = label['Confidence']
-            label['OnWatchList'] = False
-
-            # Print labels and confidence to lambda console
-            print('{} .. conf %{:.2f}'.format(lbl, conf))
-
-            # Check label watch list and trigger action
-            if (lbl.upper() in (label.upper() for label in label_watch_list) and
-                    conf >= label_watch_min_conf):
-
-                label['OnWatchList'] = True
-                labels_on_watch_list.append(deepcopy(label))
-
-            # Convert from float to decimal for DynamoDB
-            label['Confidence'] = decimal.Decimal(conf)
-
-        # Send out notification(s), if needed
-        if len(labels_on_watch_list) > 0 \
-                and (label_watch_phone_num or label_watch_sns_topic_arn):
-
-            notification_txt = 'On {}...\n'.format(now.strftime('%x, %-I:%M %p %Z'))
-
-            for label in labels_on_watch_list:
-
-                notification_txt += '- "{}" was detected with {}% confidence.\n'.format(
-                    label['Name'],
-                    round(label['Confidence'], 2))
-
-            print(notification_txt)
-
-            if label_watch_phone_num:
-                sns_client.publish(PhoneNumber=label_watch_phone_num, Message=notification_txt)
-
-            if label_watch_sns_topic_arn:
-                resp = sns_client.publish(
-                    TopicArn=label_watch_sns_topic_arn,
-                    Message=json.dumps(
-                        {
-                            "message": notification_txt,
-                            "labels": labels_on_watch_list
-                        }
-                    )
-                )
-
-                if resp.get("MessageId", ""):
-                    print("Successfully published alert message to SNS.")
+        faces = []
+        for face_match in response['FaceMatches']:
+            print(face_match)
+            face_id = face_match['Face']['FaceId']
+            image_id = face_match['Face']['ImageId']
+            external_id = face_match['Face']['ExternalImageId']
+            confidence = decimal.Decimal(face_match['Face']['Confidence'])
+            faces.append({
+                'face_id': face_id,
+                'image_id': image_id,
+                'exernal_id': external_id,
+                'confidence': confidence
+            })
 
         # Store frame image in S3
         s3_key = (s3_key_frames_root + '{}/{}/{}/{}/{}.jpg').format(year, mon, day, hour, frame_id)
@@ -156,13 +110,10 @@ def process_image(event, context):
             'frame_id': frame_id,
             'processed_timestamp': processed_timestamp,
             'approx_capture_timestamp': approx_capture_timestamp,
-            'rekog_labels': rekog_response['Labels'],
-            'rekog_orientation_correction':
-                rekog_response['OrientationCorrection']
-                if 'OrientationCorrection' in rekog_response else 'ROTATE_0',
             'processed_year_month': year + mon,  # To be used as a Hash Key for DynamoDB GSI
             's3_bucket': s3_bucket,
-            's3_key': s3_key
+            's3_key': s3_key,
+            'faces': faces
         }
 
         ddb_table.put_item(Item=item)

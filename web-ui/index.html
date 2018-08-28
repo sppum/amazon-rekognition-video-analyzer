@@ -45,8 +45,8 @@ or in the "license" file accompanying this file. This file is distributed on an 
                   <span>
                       <ul class="rekog-label-list">
                           <b>Detected objects</b>
-                          <li class="rekog-label" v-for="label of frame.rekog_labels">
-                              {{label.Name}} ({{(Math.round((label.Confidence + 0.00001) * 100) / 100) + "%"}}) <b>{{label.OnWatchList? "On Watch List -- ALERT!" : ""}}</b>
+                          <li class="rekog-label" v-for="face of frame.faces">
+                              {{face.exernal_id}} ({{(Math.round((face.confidence + 0.00001) * 100) / 100) + "%"}})
                           </li>
                       </ul> 
                   </span>

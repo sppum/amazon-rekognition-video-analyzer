@@ -52,6 +52,8 @@ def process_image(event, context):
 
     collection_id = config.get("ImagesCollection")
 
+    stored_count = 0
+
     # Iterate on frames fetched from Kinesis
     for record in event['Records']:
 
@@ -96,29 +98,32 @@ def process_image(event, context):
                 'confidence': confidence
             })
 
-        # Store frame image in S3
-        s3_key = (s3_key_frames_root + '{}/{}/{}/{}/{}.jpg').format(year, mon, day, hour, frame_id)
+        if faces:
+            # Store frame image in S3
+            s3_key = (s3_key_frames_root + '{}/{}/{}/{}/{}.jpg').format(year, mon, day, hour, frame_id)
 
-        s3_client.put_object(
-            Bucket=s3_bucket,
-            Key=s3_key,
-            Body=img_bytes
-        )
+            s3_client.put_object(
+                Bucket=s3_bucket,
+                Key=s3_key,
+                Body=img_bytes
+            )
 
-        # Persist frame data in dynamodb
-        item = {
-            'frame_id': frame_id,
-            'processed_timestamp': processed_timestamp,
-            'approx_capture_timestamp': approx_capture_timestamp,
-            'processed_year_month': year + mon,  # To be used as a Hash Key for DynamoDB GSI
-            's3_bucket': s3_bucket,
-            's3_key': s3_key,
-            'faces': faces
-        }
+            # Persist frame data in dynamodb
+            item = {
+                'frame_id': frame_id,
+                'processed_timestamp': processed_timestamp,
+                'approx_capture_timestamp': approx_capture_timestamp,
+                'processed_year_month': year + mon,  # To be used as a Hash Key for DynamoDB GSI
+                's3_bucket': s3_bucket,
+                's3_key': s3_key,
+                'faces': faces
+            }
 
-        ddb_table.put_item(Item=item)
+            ddb_table.put_item(Item=item)
 
-    print('Successfully processed {} records.'.format(len(event['Records'])))
+            stored_count += 1
+
+    print('Successfully processed {} records (stored {}).'.format(len(event['Records']), stored_count))
     return
 
 

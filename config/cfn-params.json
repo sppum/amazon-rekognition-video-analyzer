@@ -6,7 +6,5 @@
     "FrameFetcherApiResourcePathPart" : "enrichedframe",
     "ApiGatewayRestApiNameParameter" : "VidAnalyzerRestApi",
     "ApiGatewayStageNameParameter": "development",
-    "ApiGatewayUsagePlanNameParameter" : "development-plan",
-    "ImagesPrefix": "images",
-    "ImagesCollection": "mycollection"
+    "ApiGatewayUsagePlanNameParameter" : "development-plan"
 }

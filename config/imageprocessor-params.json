@@ -13,5 +13,7 @@
     "label_watch_sns_topic_arn" : "",
 
 	"timezone" : "Europe/London",
-  "ImagesCollection": "mycollection"
+  "ImagesCollection": "mycollection",
+
+  "users_table": "UsersMapping"
 }

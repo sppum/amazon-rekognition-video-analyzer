@@ -49,6 +49,7 @@ def process_image(event, context):
     s3_key_frames_root = config["s3_key_frames_root"]
 
     ddb_table = dynamodb.Table(config["ddb_table"])
+    ddb_info_table = dynamodb.Table(config["users_table"])
 
     collection_id = config.get("ImagesCollection")
 
@@ -91,11 +92,17 @@ def process_image(event, context):
             image_id = face_match['Face']['ImageId']
             external_id = face_match['Face']['ExternalImageId']
             confidence = decimal.Decimal(face_match['Face']['Confidence'])
+            try:
+                image_info = ddb_info_table.get_item(Key={'image_file': external_id})
+                person_name = image_info['Item']['name']
+            except KeyError:
+                person_name = None
             faces.append({
                 'face_id': face_id,
                 'image_id': image_id,
                 'external_id': external_id,
-                'confidence': confidence
+                'confidence': confidence,
+                'person_name': person_name
             })
 
         if faces:

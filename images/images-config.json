@@ -1,0 +1,10 @@
+{
+  "ImagesCollection": "mycollection",
+  "ImagesPrefix": "images",
+  "ImagesMap": {
+    "sewardjm-primary-badge-photo.jpg": {
+      "name": "some cool guy",
+      "height": "yes"
+      }
+  }
+}

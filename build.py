@@ -470,8 +470,10 @@ def deletedata(global_params_path="config/global-params.json", cfn_params_path="
 def uploadimages(cfn_params_path="config/cfn-params.json"):
     cfn_params_dict = read_json(cfn_params_path)
     source_bucket = cfn_params_dict["SourceS3BucketParameter"]
-    images_prefix = cfn_params_dict["ImagesPrefix"]
-    image_collection = cfn_params_dict["ImagesCollection"]
+
+    images_params_dict = read_json("images/images-config.json")
+    images_prefix = images_params_dict["ImagesPrefix"]
+    image_collection = images_params_dict["ImagesCollection"]
 
     s3_client = boto3.client("s3")
     rekognition_client = boto3.client("rekognition")
@@ -512,3 +514,19 @@ def uploadimages(cfn_params_path="config/cfn-params.json"):
             print(e)
     print('Processed {} image(s)'.format(count))
 
+
+@task()
+def mapimages():
+    images_params_dict = read_json("images/images-config.json")
+    images_map = images_params_dict["ImagesMap"]
+
+    dynamo = boto3.resource('dynamodb')
+    dynamo_table = dynamo.Table('UsersMapping')
+
+    for image in images_map:
+        values = images_map[image]
+        values['image_file'] = image
+        print(values)
+        dynamo_table.put_item(
+            Item=values
+        )

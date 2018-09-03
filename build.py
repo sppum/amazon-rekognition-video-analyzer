@@ -489,7 +489,7 @@ def uploadimages(cfn_params_path="config/cfn-params.json"):
             raise
 
     count = 0
-    for filename in glob.glob(os.path.join(images_prefix, "*")):
+    for filename in glob.glob(os.path.join(images_prefix, "*.jpg")):
         try:
             print('Uploading {} to S3...'.format(filename))
             s3_key = '/'.join([images_prefix, filename])

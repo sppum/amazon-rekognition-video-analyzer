@@ -1,8 +1,8 @@
 {
-    "SourceS3BucketParameter" : "sewardjm-nhs-code",
+    "SourceS3BucketParameter" : "hackathon-nhs-code",
     "ImageProcessorSourceS3KeyParameter" : "src/lambda_imageprocessor.zip",
     "FrameFetcherSourceS3KeyParameter" : "src/lambda_framefetcher.zip",
-    "FrameS3BucketNameParameter" : "sewardjm-nhs-frames",
+    "FrameS3BucketNameParameter" : "hackathon-nhs-frames",
     "FrameFetcherApiResourcePathPart" : "enrichedframe",
     "ApiGatewayRestApiNameParameter" : "VidAnalyzerRestApi",
     "ApiGatewayStageNameParameter": "development",

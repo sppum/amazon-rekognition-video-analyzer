@@ -1,5 +1,5 @@
 {
-	"s3_bucket" : "sewardjm-nhs-frames",
+	"s3_bucket" : "hackathon-nhs-frames",
 	"s3_key_frames_root" : "frames/",
 
 	"ddb_table" : "EnrichedFrame",

@@ -15,6 +15,7 @@ import json
 from subprocess import call
 import SimpleHTTPServer
 import SocketServer
+import subprocess
 
 def write_dir_to_zip(src, zf):
     '''Write a directory tree to an open ZipFile object.'''
@@ -468,6 +469,7 @@ def deletedata(global_params_path="config/global-params.json", cfn_params_path="
 
 @task()
 def uploadimages(cfn_params_path="config/cfn-params.json"):
+    """Teach Rekognition all the jpg files in the images directory"""
     cfn_params_dict = read_json(cfn_params_path)
     source_bucket = cfn_params_dict["SourceS3BucketParameter"]
 
@@ -517,6 +519,7 @@ def uploadimages(cfn_params_path="config/cfn-params.json"):
 
 @task()
 def mapimages():
+    """Update the mapping of filenames to names in DynamoDB"""
     images_params_dict = read_json("images/images-config.json")
     images_map = images_params_dict["ImagesMap"]
 
@@ -530,3 +533,12 @@ def mapimages():
         dynamo_table.put_item(
             Item=values
         )
+
+
+@task()
+def imagecapture(sourcepath=None):
+    """Monitor the sourcepath for images and send to kinesis"""
+    if sourcepath:
+        subprocess.call(['python', 'client/image_cap.py', sourcepath])
+    else:
+        print('Missing sourcepath')

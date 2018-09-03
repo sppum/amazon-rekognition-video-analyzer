@@ -76,12 +76,16 @@ def process_image(event, context):
         day = now.strftime("%d")
         hour = now.strftime("%H")
 
-        response = rekog_client.search_faces_by_image(
-            Image={
-                'Bytes': img_bytes
-            },
-            CollectionId=collection_id
-        )
+        try:
+            response = rekog_client.search_faces_by_image(
+                Image={
+                    'Bytes': img_bytes
+                },
+                CollectionId=collection_id
+            )
+        except:
+            # SDK throws an exception if there are no faces in image
+            continue
 
         # Iterate on rekognition labels. Enrich and prep them for storage in
         # DynamoDB

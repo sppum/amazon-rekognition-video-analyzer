@@ -15,15 +15,17 @@ Here's the prototype's conceptual architecture:
 Let's go through the steps necessary to get this prototype up and running. If you are starting from scratch and are not familiar with Python, completing all steps can take a few hours.
 
 ## Preparing your development environment
-Here’s a high-level checklist of what you need to do to setup your development environment.
+Here’s a high-level checklist of what you need to do to setup your development environment on macOS:
 
 1. Sign up for an AWS account if you haven't already and create an Administrator User. The steps are published [here](http://docs.aws.amazon.com/lambda/latest/dg/setting-up.html).
 
-2. Ensure that you have Python 2.7+ and Pip on your machine. Instructions for that varies based on your operating system and OS version.
+2. Install [homebrew](https://brew.sh/)
 
-3. Create a Python [virtual environment](https://virtualenv.pypa.io/en/stable/) for the project with Virtualenv. This helps keep project’s python dependencies neatly isolated from your Operating System’s default python installation. **Once you’ve created a virtual python environment, activate it before moving on with the following steps**.
+3. Install pipenv: `pip install --user pipenv`. Ensure that the install location is in your PATH. (`$(python -m site --user-base)/bin`)
 
-4. Use Pip to [install AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/installing.html). [Configure](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) the AWS CLI. It is recommended that the access keys you configure are associated with an IAM User who has full access to the following:
+4. Clone the repo, and then in it, get pipenv to install your environment using Python 2. We need to allow access to site packages for opencv as installed by brew: `pipenv --two --site-packages install`.
+
+5. Configure AWS credentials. It is recommended that the access keys you configure are associated with an IAM User who has full access to the following:
  - Amazon S3
  - Amazon DynamoDB
  - Amazon Kinesis
@@ -35,25 +37,7 @@ Here’s a high-level checklist of what you need to do to setup your development
  - Amazon API Gateway
  - Creating IAM Roles
 
- The IAM User can be the Administrator User you created in Step 1.
-
-5. Make sure you choose a region where all of the above services are available. Regions us-east-1 (N. Virginia), us-west-2 (Oregon), and eu-west-1 (Ireland) fulfill this criterion. Visit [this page](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) to learn more about service availability in AWS regions.
-
-6. Use Pip to install [Open CV](https://github.com/opencv/opencv) 3 python dependencies and then compile, build, and install Open CV 3 (required by Video Cap clients). You can follow [this guide](http://www.pyimagesearch.com/2016/11/28/macos-install-opencv-3-and-python-2-7/) to get Open CV 3 up and running on OS X Sierra with Python 2.7. There's [another guide](http://www.pyimagesearch.com/2016/12/05/macos-install-opencv-3-and-python-3-5/) for Open CV 3 and Python 3.5 on OS X Sierra. Other guides exist as well for Windows and Raspberry Pi.
-
-6. Use Pip to install [Boto3](http://boto3.readthedocs.io/en/latest/). Boto is the Amazon Web Services (AWS) SDK for Python, which allows Python developers to write software that makes use of Amazon services like S3 and EC2. Boto provides an easy to use, object-oriented API as well as low-level direct access to AWS services.
-
-7. Use Pip to install [Pynt](https://github.com/rags/pynt). Pynt enables you to write project build scripts in Python.
-
-8. Clone this GitHub repository. Choose a directory path for your project that does not contain spaces (I'll refer to the full path to this directory as _\<path-to-project-dir\>_).
-
-9. Use Pip to install [pytz](http://pytz.sourceforge.net/). Pytz is needed for timezone calculations. Use the following commands:
-
-```bash
-pip install pytz # Install pytz in your virtual python env
-
-pip install pytz -t <path-to-project-dir>/lambda/imageprocessor/ # Install pytz to be packaged and deployed with the Image Processor lambda function
-```
+6. Make sure you choose a region where all of the above services are available. Regions us-east-1 (N. Virginia), us-west-2 (Oregon), and eu-west-1 (Ireland) fulfill this criterion. Visit [this page](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) to learn more about service availability in AWS regions.
 
 Finally, obtain an IP camera. If you don’t have an IP camera, you can use your smartphone with an IP camera app. This is useful in case you want to test things out before investing in an IP camera. Also, you can simply use your laptop’s built-in camera or a connected USB camera. If you use an IP camera, make sure your camera is connected to the same Local Area Network as the Video Capture client.
 

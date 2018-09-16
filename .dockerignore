@@ -1,0 +1,13 @@
+# Ignore .git
+.git
+
+# Ignore compiles python
+*.pyc
+
+# Ignore the directory contents which we don't need
+Dockerfile
+build.pyc
+docker.sh
+LICENSE.TXT
+Pipfile
+build.py
